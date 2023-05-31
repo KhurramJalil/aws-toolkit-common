@@ -5,5 +5,9 @@
     "main": "out/index.js",
     "scripts": {
         "compile": "tsc --build"
+    },
+    "dependencies": {
+        "vscode-json-languageservice": "^5.3.5",
+        "vscode-languageserver": "8.0.1"
     }
 }

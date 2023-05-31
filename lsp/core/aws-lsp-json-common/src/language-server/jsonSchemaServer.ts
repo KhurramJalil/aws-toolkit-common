@@ -1,4 +1,3 @@
-// TODO : figure out if these are the right packages to import from; do type imports where possible
 import {
     JSONDocument,
     LanguageService,
@@ -15,19 +14,13 @@ import {
     TextDocuments,
 } from 'vscode-languageserver'
 
-// TODO : move to a separate file
-export const jsonSchemaUrls = {
-    buildSpec: 'https://d3rrggjwfhwld2.cloudfront.net/CodeBuild/buildspec/buildspec-standalone.schema.json',
-    placeholder: 'foo://server/data.schema.json',
-}
-
-export type ConfigurableJsonLanguageServerProps = {
+export type JsonSchemaServerProps = {
     connection: Connection
     defaultSchemaUri?: string
     schemaRequestService?: SchemaRequestService
 }
 
-export class ConfigurableJsonLanguageServer {
+export class JsonSchemaServer {
     /**
      * Options, provided by language server to `onInitialize` callback.
      */
@@ -41,7 +34,7 @@ export class ConfigurableJsonLanguageServer {
 
     protected connection: Connection
 
-    constructor(private readonly props: ConfigurableJsonLanguageServerProps) {
+    constructor(private readonly props: JsonSchemaServerProps) {
         this.connection = props.connection
 
         this.jsonService = getLanguageService({
