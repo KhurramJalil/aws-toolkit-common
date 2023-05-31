@@ -4,7 +4,8 @@
     "description": "A monorepo for AWS Language Servers (@christou-lsp-test)",
     "private": true,
     "workspaces": [
-        "core/*"
+        "core/*",
+        "server/*"
     ],
     "scripts": {
         "prepare": "cd .. && husky install lsp/.husky",
