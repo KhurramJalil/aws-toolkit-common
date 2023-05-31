@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "UMD",
+        "target": "ES2021",
+        "moduleResolution": "node",
+        "rootDir": "./src",
+        "outDir": "./out",
+        "declaration": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true
+    },
+    "files": [],
+    "references": [
+        {
+            "path": "./core/aws-lsp-core"
+        },
+        {
+            "path": "./core/aws-lsp-json-common"
+        }
+    ]
+}

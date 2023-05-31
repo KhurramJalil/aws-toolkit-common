@@ -1,0 +1,9 @@
+{
+    "name": "@christou-lsp-test/aws-lsp-json-common",
+    "version": "0.0.1",
+    "description": "JSON Language Server common code library",
+    "main": "out/index.js",
+    "scripts": {
+        "compile": "tsc --build"
+    }
+}
