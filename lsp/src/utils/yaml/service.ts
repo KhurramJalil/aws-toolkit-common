@@ -95,13 +95,12 @@
 //         }
 //         const connection = createConnection()
 //         const yamlTelemetry = new YAMLTelemetry(connection)
-//         const yaml = getYamlLanguageService(
-//             schemaRequestService,
+//         const yaml = getYamlLanguageService({
+//             schemaRequestService: schemaResolver,
 //             workspaceContext,
 //             connection,
-//             yamlTelemetry,
-//             null as any
-//         )
+//             telemetry: yamlTelemetry,
+//         })
 
 //         if (languageSettings) {
 //             yaml.configure(languageSettings)
