@@ -29,6 +29,9 @@
         },
         {
             "path": "./server/aws-lsp-buildspec-json"
+        },
+        {
+            "path": "./server/aws-lsp-buildspec-yaml"
         }
     ]
 }

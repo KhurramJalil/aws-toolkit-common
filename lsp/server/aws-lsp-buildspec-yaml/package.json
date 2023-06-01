@@ -1,0 +1,12 @@
+{
+    "name": "@christou-lsp-test/aws-lsp-buildspec-yaml",
+    "version": "0.0.1",
+    "description": "CodeBuild BuildSpec YAML Language Server",
+    "main": "out/index.js",
+    "scripts": {
+        "compile": "tsc --build"
+    },
+    "dependencies": {
+        "@christou-lsp-test/aws-lsp-yaml-common": "^0.0.1"
+    }
+}
