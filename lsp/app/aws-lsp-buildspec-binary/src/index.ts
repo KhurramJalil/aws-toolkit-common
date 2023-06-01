@@ -8,6 +8,7 @@ const connection = createConnection(ProposedFeatures.all)
 
 const props: BuildspecServerProps = {
     connection,
+    defaultSchemaUri: BuildspecServer.jsonSchemaUrl,
     schemaProvider: async (uri: string) => {
         switch (uri) {
             case BuildspecServer.jsonSchemaUrl:

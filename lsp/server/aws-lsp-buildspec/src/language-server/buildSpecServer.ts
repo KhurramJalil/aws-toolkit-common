@@ -1,4 +1,4 @@
-import { SchemaProvider, textDocumentUtils } from '@christou-lsp-test/aws-lsp-core'
+import { SchemaProvider, completionItemUtils, textDocumentUtils } from '@christou-lsp-test/aws-lsp-core'
 import { JsonLanguageServiceWrapper } from '@christou-lsp-test/aws-lsp-json-common'
 import { YamlLanguageServiceWrapper } from '@christou-lsp-test/aws-lsp-yaml-common'
 import {
@@ -11,7 +11,6 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 export type BuildspecServerProps = {
-    displayName: string
     connection: Connection
     defaultSchemaUri: string
     schemaProvider: SchemaProvider
@@ -20,6 +19,8 @@ export type BuildspecServerProps = {
 export class BuildspecServer {
     public static readonly jsonSchemaUrl: string =
         'https://d3rrggjwfhwld2.cloudfront.net/CodeBuild/buildspec/buildspec-standalone.schema.json'
+
+    public static readonly serverId = 'aws-lsp-buildspec'
 
     protected documents = new TextDocuments(TextDocument)
 
@@ -32,7 +33,10 @@ export class BuildspecServer {
         this.connection = props.connection
 
         this.jsonService = new JsonLanguageServiceWrapper(props)
-        this.yamlService = new YamlLanguageServiceWrapper(props)
+        this.yamlService = new YamlLanguageServiceWrapper({
+            displayName: BuildspecServer.serverId,
+            ...props,
+        })
 
         this.connection.onInitialize((params: InitializeParams) => {
             // this.options = params;
@@ -95,9 +99,19 @@ export class BuildspecServer {
             const textDocument = this.getTextDocument(requestedDocument.uri)
 
             if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === true) {
-                return await this.jsonService.doComplete(textDocument, position)
+                const results = await this.jsonService.doComplete(textDocument, position)
+
+                if (results!!) {
+                    completionItemUtils.prependItemDetail(results.items, BuildspecServer.serverId)
+                }
+
+                return results
             } else if (YamlLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === true) {
-                return await this.yamlService.doComplete(textDocument, position)
+                const results = await this.yamlService.doComplete(textDocument, position)
+
+                completionItemUtils.prependItemDetail(results.items, BuildspecServer.serverId)
+
+                return results
             }
 
             return
