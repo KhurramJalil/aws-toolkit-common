@@ -1,3 +1,2 @@
-export function sayHello(name: string): string {
-    return `hi: ${name}`
-}
+export * from './types/schemaProvider'
+export * as textDocumentUtils from './util/textDocumentUtils'

@@ -8,7 +8,7 @@ const connection = createConnection(ProposedFeatures.all)
 
 const props: BuildspecServerProps = {
     connection,
-    schemaRequestService: async (uri: string) => {
+    schemaProvider: async (uri: string) => {
         switch (uri) {
             case BuildspecServer.jsonSchemaUrl:
                 return await getFileAsync(uri)

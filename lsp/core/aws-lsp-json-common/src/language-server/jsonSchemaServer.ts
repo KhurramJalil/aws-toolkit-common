@@ -1,23 +1,18 @@
-import {
-    JSONDocument,
-    LanguageService,
-    SchemaRequestService,
-    TextDocument,
-    getLanguageService,
-} from 'vscode-json-languageservice'
+import { SchemaProvider, textDocumentUtils } from '@christou-lsp-test/aws-lsp-core'
 import {
     Connection,
     InitializeParams,
     InitializeResult,
-    Range,
     TextDocumentSyncKind,
     TextDocuments,
 } from 'vscode-languageserver'
+import { TextDocument } from 'vscode-languageserver-textdocument'
+import { JsonLanguageServiceWrapper } from './jsonLanguageServiceWrapper'
 
 export type JsonSchemaServerProps = {
     connection: Connection
     defaultSchemaUri?: string
-    schemaRequestService?: SchemaRequestService
+    schemaProvider?: SchemaProvider
 }
 
 export class JsonSchemaServer {
@@ -30,20 +25,14 @@ export class JsonSchemaServer {
      */
     protected documents = new TextDocuments(TextDocument)
 
-    protected jsonService: LanguageService
+    protected jsonService: JsonLanguageServiceWrapper
 
     protected connection: Connection
 
     constructor(private readonly props: JsonSchemaServerProps) {
         this.connection = props.connection
 
-        this.jsonService = getLanguageService({
-            schemaRequestService: props.schemaRequestService?.bind(this),
-        })
-
-        const schemas = props.defaultSchemaUri ? [{ fileMatch: ['*.json'], uri: props.defaultSchemaUri }] : undefined
-
-        this.jsonService.configure({ allowComments: false, schemas })
+        this.jsonService = new JsonLanguageServiceWrapper(props)
 
         this.connection.onInitialize((params: InitializeParams) => {
             // this.options = params;
@@ -69,68 +58,73 @@ export class JsonSchemaServer {
         this.connection.console.info('AWS Documents LS started!')
     }
 
-    getTextDocument(uri: string): TextDocument | undefined {
-        return this.documents.get(uri)
-    }
+    getTextDocument(uri: string): TextDocument {
+        const textDocument = this.documents.get(uri)
 
-    getTextDocumentAndJsonDocument(uri: string): [TextDocument, JSONDocument] {
-        const textDocument = this.getTextDocument(uri)
-        /* istanbul ignore next */
-        const jsonDocument = textDocument ? this.jsonService.parseJSONDocument(textDocument) : undefined
-        /* istanbul ignore next */
-        if (!textDocument || !jsonDocument) {
+        if (!textDocument) {
             throw new Error(`Document with uri ${uri} not found.`)
         }
-        return [textDocument, jsonDocument]
+
+        return textDocument
     }
 
     async validateDocument(uri: string): Promise<void> {
-        const [textDocument, jsonDocument] = this.getTextDocumentAndJsonDocument(uri)
-        if (textDocument.languageId != 'json') {
+        const textDocument = this.getTextDocument(uri)
+
+        if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
             return
         }
 
-        const diagnostics = await this.jsonService.doValidation(textDocument, jsonDocument)
+        const diagnostics = await this.jsonService.doValidation(textDocument)
         this.connection.sendDiagnostics({ uri, version: textDocument.version, diagnostics })
     }
 
     registerHandlers() {
         this.documents.onDidOpen(({ document }) => {
+            if (JsonLanguageServiceWrapper.isLangaugeIdSupported(document.languageId) === false) {
+                return
+            }
+
             this.validateDocument(document.uri)
         })
 
         this.documents.onDidChangeContent(({ document }) => {
+            if (JsonLanguageServiceWrapper.isLangaugeIdSupported(document.languageId) === false) {
+                return
+            }
             this.validateDocument(document.uri)
         })
 
         this.connection.onCompletion(async ({ textDocument: requestedDocument, position }) => {
-            const [textDocument, jsonDocument] = this.getTextDocumentAndJsonDocument(requestedDocument.uri)
-            return await this.jsonService.doComplete(textDocument, position, jsonDocument)
+            const textDocument = this.getTextDocument(requestedDocument.uri)
+
+            if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
+            return await this.jsonService.doComplete(textDocument, position)
         })
 
         this.connection.onCompletionResolve(item => item)
 
         this.connection.onHover(async ({ textDocument: requestedDocument, position }) => {
-            const [textDocument, jsonDocument] = this.getTextDocumentAndJsonDocument(requestedDocument.uri)
-            return await this.jsonService.doHover(textDocument, position, jsonDocument)
+            const textDocument = this.getTextDocument(requestedDocument.uri)
+
+            if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
+            return await this.jsonService.doHover(textDocument, position)
         })
 
         this.connection.onDocumentFormatting(async ({ textDocument: requestedDocument, options }) => {
-            const [textDocument] = this.getTextDocumentAndJsonDocument(requestedDocument.uri)
-            return await this.jsonService.format(textDocument, getTextDocumentFullRange(textDocument), options)
-        })
-    }
-}
+            const textDocument = this.getTextDocument(requestedDocument.uri)
 
-const getTextDocumentFullRange = (textDocument: TextDocument): Range => {
-    return {
-        start: {
-            line: 0,
-            character: 0,
-        },
-        end: {
-            line: textDocument.lineCount,
-            character: 0,
-        },
+            if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
+            return this.jsonService.format(textDocument, textDocumentUtils.getFullRange(textDocument), options)
+        })
     }
 }
