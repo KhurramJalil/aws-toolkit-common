@@ -12,7 +12,8 @@
         "prepare": "cd .. && husky install lsp/.husky",
         "format": "prettier --write .",
         "format-staged": "npx pretty-quick --staged",
-        "compile": "tsc --build --verbose"
+        "compile": "tsc --build --verbose",
+        "watch": "tsc --build --watch"
     },
     "dependencies": {
         "typescript": "^5.0.4"
