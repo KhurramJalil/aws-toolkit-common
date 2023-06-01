@@ -1,4 +1,5 @@
 // TODO : figure out if these are the right packages to import from; do type imports where possible
+import { SchemaProvider, completionItemUtils } from '@christou-lsp-test/aws-lsp-core'
 import {
     Connection,
     InitializeParams,
@@ -7,13 +8,13 @@ import {
     TextDocuments,
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { LanguageService, SchemaRequestService, getLanguageService } from 'yaml-language-server'
+import { YamlLanguageServiceWrapper } from './yamlLanguageServiceWrapper'
 
 export type YamlSchemaServerProps = {
     displayName: string
     connection: Connection
     defaultSchemaUri: string
-    schemaRequestService: SchemaRequestService
+    schemaProvider: SchemaProvider
 }
 
 export class YamlSchemaServer {
@@ -26,24 +27,13 @@ export class YamlSchemaServer {
      */
     protected documents = new TextDocuments(TextDocument)
 
-    protected yamlService: LanguageService
+    protected yamlService: YamlLanguageServiceWrapper
     protected connection: Connection
 
     constructor(private readonly props: YamlSchemaServerProps) {
         this.connection = props.connection
 
-        const workspaceContext = {
-            resolveRelativePath(relativePath: string, resource: string) {
-                return new URL(relativePath, resource).href
-            },
-        }
-
-        this.yamlService = getLanguageService({
-            schemaRequestService: this.props.schemaRequestService,
-            workspaceContext,
-        })
-
-        this.yamlService.configure({ schemas: [{ fileMatch: ['*.yml'], uri: this.props.defaultSchemaUri }] })
+        this.yamlService = new YamlLanguageServiceWrapper(props)
 
         this.connection.onInitialize((params: InitializeParams) => {
             // this.options = params;
@@ -72,7 +62,7 @@ export class YamlSchemaServer {
         this.connection.console.info('AWS Documents LS started!')
     }
 
-    getTextDocument(uri: string, throwIfEmpty = false): TextDocument | undefined {
+    getTextDocument(uri: string): TextDocument {
         const doc = this.documents.get(uri)
         if (!doc) {
             throw new Error(`Document with uri ${uri} not found.`)
@@ -83,9 +73,13 @@ export class YamlSchemaServer {
 
     async validateDocument(uri: string): Promise<void> {
         try {
-            const textDocument = this.getTextDocument(uri, true)!
-            this.updateSchemaMapping(uri)
-            const diagnostics = await this.yamlService.doValidation(textDocument, false)
+            const textDocument = this.getTextDocument(uri)
+
+            if (YamlLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
+            const diagnostics = await this.yamlService.doValidation(textDocument)
             this.connection.sendDiagnostics({ uri, version: textDocument.version, diagnostics })
         } catch (error) {
             this.connection.console.info(`AWS Yaml validation error: ${error}`)
@@ -94,10 +88,17 @@ export class YamlSchemaServer {
 
     registerHandlers() {
         this.documents.onDidOpen(({ document }) => {
+            if (YamlLanguageServiceWrapper.isLangaugeIdSupported(document.languageId) === false) {
+                return
+            }
+
             this.validateDocument(document.uri)
         })
 
         this.documents.onDidChangeContent(({ document }) => {
+            if (YamlLanguageServiceWrapper.isLangaugeIdSupported(document.languageId) === false) {
+                return
+            }
             this.validateDocument(document.uri)
         })
 
@@ -105,14 +106,17 @@ export class YamlSchemaServer {
             try {
                 this.connection.console.info('AWS Yaml completion')
 
-                const textDocument = this.getTextDocument(requestedDocument.uri, true)!
-                this.updateSchemaMapping(requestedDocument.uri)
+                const textDocument = this.getTextDocument(requestedDocument.uri)
 
-                const results = await this.yamlService.doComplete(textDocument, position, false)
-                this.connection.console.info(JSON.stringify(results.items, null, 4))
-                for (const item of results.items) {
-                    item.detail = item.detail!! ? `${this.props.displayName}: ${item.detail}` : this.props.displayName
+                if (YamlLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                    return
                 }
+
+                const results = await this.yamlService.doComplete(textDocument, position)
+                // this.connection.console.info(JSON.stringify(results.items, null, 4))
+
+                completionItemUtils.prependItemDetail(results.items, this.props.displayName)
+
                 return results
             } catch (error) {
                 this.connection.console.info(`AWS Yaml completion error: ${error} `)
@@ -120,14 +124,22 @@ export class YamlSchemaServer {
         })
 
         this.connection.onHover(async ({ textDocument: requestedDocument, position }) => {
-            const textDocument = this.getTextDocument(requestedDocument.uri, true)!
-            this.updateSchemaMapping(requestedDocument.uri)
+            const textDocument = this.getTextDocument(requestedDocument.uri)
+
+            if (YamlLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
             return await this.yamlService.doHover(textDocument, position)
         })
 
         this.connection.onDocumentFormatting(({ textDocument: requestedDocument, options }) => {
-            const textDocument = this.getTextDocument(requestedDocument.uri, true)!
-            this.updateSchemaMapping(requestedDocument.uri)
+            const textDocument = this.getTextDocument(requestedDocument.uri)
+
+            if (YamlLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === false) {
+                return
+            }
+
             return this.yamlService.doFormat(textDocument, {})
         })
 
@@ -135,22 +147,5 @@ export class YamlSchemaServer {
         //     this.connection.console.info(JSON.stringify(item, null, 4))
         //     return item
         // })
-    }
-
-    updateSchemaMapping(documentUri: string): void {
-        this.yamlService.configure({
-            hover: true,
-            completion: true,
-            validate: true,
-            customTags: [],
-            schemas: [
-                {
-                    fileMatch: [documentUri],
-                    uri: this.props.defaultSchemaUri,
-                    name: this.props.displayName,
-                    description: 'some description,',
-                },
-            ],
-        })
     }
 }
