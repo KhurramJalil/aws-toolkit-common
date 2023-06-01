@@ -1,0 +1,12 @@
+{
+    "name": "@christou-lsp-test/aws-lsp-buildspec-binary",
+    "version": "0.0.1",
+    "description": "CodeBuild BuildSpec Language Server Binary",
+    "main": "out/index.js",
+    "scripts": {
+        "compile": "tsc --build"
+    },
+    "dependencies": {
+        "@christou-lsp-test/aws-lsp-buildspec": "^0.0.1"
+    }
+}

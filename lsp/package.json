@@ -4,6 +4,7 @@
     "description": "A monorepo for AWS Language Servers (@christou-lsp-test)",
     "private": true,
     "workspaces": [
+        "app/*",
         "core/*",
         "server/*"
     ],
