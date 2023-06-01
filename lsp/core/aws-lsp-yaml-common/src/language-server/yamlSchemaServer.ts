@@ -9,14 +9,14 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { LanguageService, SchemaRequestService, getLanguageService } from 'yaml-language-server'
 
-export type ConfigurableYamlLanguageServerProps = {
+export type YamlSchemaServerProps = {
     displayName: string
     connection: Connection
     defaultSchemaUri: string
     schemaRequestService: SchemaRequestService
 }
 
-export class ConfigurableYamlLanguageServer {
+export class YamlSchemaServer {
     /**
      * Options, provided by language server to `onInitialize` callback.
      */
@@ -29,7 +29,7 @@ export class ConfigurableYamlLanguageServer {
     protected yamlService: LanguageService
     protected connection: Connection
 
-    constructor(private readonly props: ConfigurableYamlLanguageServerProps) {
+    constructor(private readonly props: YamlSchemaServerProps) {
         this.connection = props.connection
 
         const workspaceContext = {
