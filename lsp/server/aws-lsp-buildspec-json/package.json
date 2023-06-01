@@ -1,0 +1,12 @@
+{
+    "name": "@christou-lsp-test/aws-lsp-buildspec-json",
+    "version": "0.0.1",
+    "description": "CodeBuild BuildSpec JSON Language Server",
+    "main": "out/index.js",
+    "scripts": {
+        "compile": "tsc --build"
+    },
+    "dependencies": {
+        "@christou-lsp-test/aws-lsp-json-common": "^0.0.1"
+    }
+}
