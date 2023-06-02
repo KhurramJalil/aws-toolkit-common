@@ -4,13 +4,18 @@ import { ProposedFeatures, createConnection } from 'vscode-languageserver/node'
 
 const connection = createConnection(ProposedFeatures.all)
 
+let buildSpecSchema: string | undefined
+
 const props: BuildspecServerProps = {
     connection,
     defaultSchemaUri: BuildspecServer.jsonSchemaUrl,
     schemaProvider: async (uri: string) => {
         switch (uri) {
             case BuildspecServer.jsonSchemaUrl:
-                return await getFileAsync(uri)
+                if (!buildSpecSchema) {
+                    return await getFileAsync(uri)
+                }
+                return buildSpecSchema
             default:
                 throw new Error(`Unknown schema '${uri}'.`)
         }
