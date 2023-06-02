@@ -59,7 +59,7 @@ export class BuildspecServer {
         this.documents.listen(this.connection)
         this.connection.listen()
 
-        this.connection.console.info('AWS Documents LS started!')
+        this.connection.console.info('AWS Buildspec (json/yaml) language server started!')
     }
 
     getTextDocument(uri: string): TextDocument {

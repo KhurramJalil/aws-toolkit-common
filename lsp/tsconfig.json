@@ -16,6 +16,9 @@
             "path": "./app/aws-lsp-buildspec-binary"
         },
         {
+            "path": "./client/vscode"
+        },
+        {
             "path": "./core/aws-lsp-core"
         },
         {
