@@ -75,6 +75,8 @@ export class BuildspecServer {
     async validateDocument(uri: string): Promise<void> {
         const textDocument = this.getTextDocument(uri)
 
+        this.connection.console.info(`Validating document, languageId: ${textDocument.languageId}, uri: ${uri}...`)
+
         if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === true) {
             const diagnostics = await this.jsonService.doValidation(textDocument)
             this.connection.sendDiagnostics({ uri, version: textDocument.version, diagnostics })
@@ -88,6 +90,8 @@ export class BuildspecServer {
 
     registerHandlers() {
         this.documents.onDidOpen(({ document }) => {
+            this.connection.console.info(`Document opened, uri: ${document.uri}...`)
+
             this.validateDocument(document.uri)
         })
 
@@ -121,6 +125,8 @@ export class BuildspecServer {
 
         this.connection.onHover(async ({ textDocument: requestedDocument, position }) => {
             const textDocument = this.getTextDocument(requestedDocument.uri)
+
+            this.connection.console.info(`Hover, languageId: ${textDocument.languageId}, uri: ${textDocument.uri}...`)
 
             if (JsonLanguageServiceWrapper.isLangaugeIdSupported(textDocument.languageId) === true) {
                 return await this.jsonService.doHover(textDocument, position)
