@@ -12,7 +12,7 @@ export class JsonLanguageServiceWrapper {
     private jsonService: LanguageService
 
     public static isLangaugeIdSupported(languageId: string): boolean {
-        return languageId === 'json'
+        return languageId === 'json' || languageId === 'christou-test-json'
     }
 
     constructor(private readonly props: JsonLanguageServiceWrapperProps) {

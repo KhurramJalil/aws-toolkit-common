@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.LanguageServer.Client;
+﻿using IdesLspPoc.ContentDefinitions;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
@@ -17,7 +18,12 @@ namespace IdesLspPoc.LspClient
 
     // Design thoughts - one of these for each distinct LSP we manage. We could have multiple ContentType declarations.
 
+    // this one "just works" to tie yaml to our LSP
     [ContentType("yaml")]
+
+    // for some reason, we have to fuse JSON to our LSP through a custom type that 
+    [ContentType(JsonContentType.ContentTypeName)]
+
     // [ContentType(BuildSpec.ContentType)] // Only add this if you're supporting custom file extensions
     [Export(typeof(ILanguageClient))]
     public class ToolkitLspClient : ILanguageClient
@@ -57,6 +63,9 @@ namespace IdesLspPoc.LspClient
 
         public IEnumerable<string> FilesToWatch { get; } = new List<string>()
         {
+            //"**/*.json",
+            //"**/*.yaml",
+            //"**/*.yml",
             // "**/*.buildspec",
             // "**/*buildspec*.yml",
             // "**/*buildspec*.yaml",
@@ -80,14 +89,17 @@ namespace IdesLspPoc.LspClient
         public async Task OnLoadedAsync()
         {
             // Just exploring how to query for VS what file types it knows about
-            // var x = ContentTypeRegistryService.ContentTypes.ToList();
-            // var ttt = x.Select(q => q.DisplayName).ToList();
+            //var contentTypes = ContentTypeRegistryService.ContentTypes.ToList();
+            //var contentTypeNames = contentTypes.Select(q => q.DisplayName).OrderBy(s => s).ToList();
 
             // Design thoughts - we might start downloading the LSP in the background here.
             // We would conclude then call StartAsync when the download completes, in order to trigger ActivateAsync.
 
             await _outputWindow.InitializeAsync(CancellationToken.None);
-            
+            //_outputWindow.WriteLine("----------");
+            //_outputWindow.WriteLine(string.Join(Environment.NewLine, contentTypeNames));
+            //_outputWindow.WriteLine("----------");
+
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
@@ -149,12 +161,12 @@ namespace IdesLspPoc.LspClient
         private Process CreateLspProcess()
         {
             // to try using this extension, update dir to wherever your lsp service executable is
-            var dir = @"C:\code\aws-toolkit-common\lsp";
+            var dir = @"C:\code\aws-toolkit-common\lsp\app\aws-lsp-buildspec-binary\bin";
 
             ProcessStartInfo info = new ProcessStartInfo
             {
                 WorkingDirectory = dir,
-                FileName = $@"{dir}\awsdocuments-language-server-win.exe",
+                FileName = $@"{dir}\aws-lsp-buildspec-binary.exe",
                 Arguments = "--stdio",
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
