@@ -2,9 +2,9 @@ import { createHash } from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
 import { URI } from 'vscode-uri'
-import { LanguageServerCacheDir } from '../configurationDirectory'
-import { Time } from '../datetime'
-import { DefaultHttpRequester, getETag, HttpRequester, HttpRequestHeaders, HttpResponse } from '../http/request'
+import { DefaultHttpRequester, getETag, HttpRequester, HttpRequestHeaders, HttpResponse } from '../http/requesters'
+import { Time } from '../util/datetime'
+import { LanguageServerCacheDir } from './configurationDirectory'
 
 /** Represents the `metadata` file structure */
 interface UriCacheMetadata {

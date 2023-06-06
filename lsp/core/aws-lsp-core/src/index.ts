@@ -1,4 +1,7 @@
+export { LanguageServerCacheDir } from './contentResolver/configurationDirectory'
+export * as contentResolvers from './contentResolver/contentResolvers'
 export * from './types/schemaProvider'
 export * as completionItemUtils from './util/completionItemUtils'
+export { Time } from './util/datetime'
 export * as httpsUtils from './util/httpsUtils'
 export * as textDocumentUtils from './util/textDocumentUtils'
